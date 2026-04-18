@@ -5,23 +5,40 @@ import impact.ui.ImpactView;
 import impact.ui.ImpactController;
 import javax.swing.SwingUtilities;
 
+/**
+ * Main クラス
+ * [MVC: Launcher]
+ * プロジェクトのすべての部品を繋ぎ合わせる、SmileLog の起動クラスです。
+ * 注意: このファイルには public class Main のみが含まれる必要があります。
+ */
 public class Main {
   public static void main(String[] args) {
-    // [文法] SwingUtilities.invokeLater
-    // [意味] 「画面（GUI）の準備が整ってから安全に起動してね」というJavaのおまじない。
+    // SwingのGUIスレッドを安全に起動するための仕組み
     SwingUtilities.invokeLater(() -> {
-      // 1. 【脳】を作る
-      ImpactModel model = new ImpactModel();
+      try {
+        // 1. データの管理役 (Model) を作成
+        ImpactModel model = new ImpactModel();
 
-      // 2. 【顔】を作る
-      ImpactView view = new ImpactView();
+        // 過去のデータがあれば読み込む
+        try {
+          model.loadFromCSV("impact_data.csv");
+        } catch (Exception e) {
+          System.out.println("New session started: impact_data.csv will be created upon submission.");
+        }
 
-      // 3. 【司令塔】に「脳」と「顔」を預けて繋いでもらう
-      // なぜ？ ➔ Controllerがこの2つを持っていないと、橋渡しができないから。
-      new ImpactController(model, view);
+        // 2. 画面の表示役 (View) を作成
+        ImpactView view = new ImpactView();
 
-      // 4. 【表示】窓を見えるようにする
-      view.setVisible(true);
+        // 3. 橋渡し役 (Controller) を作成し、ModelとViewを繋ぐ
+        new ImpactController(model, view);
+
+        // 4. 画面を可視化
+        view.setVisible(true);
+
+        System.out.println("SmileLog is now active... 🌸");
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     });
   }
 }

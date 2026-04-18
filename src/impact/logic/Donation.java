@@ -1,40 +1,86 @@
 package impact.logic;
-import impact.core.AbstractSupport;
+
 import impact.core.AbstractSupport;
 
 /**
- * 【文法：継承 (extends)】
- * 土台を引き継ぎ、「寄付」ならではの計算ロジックを追加します。
+ * Donation クラス
+ * [FIX] getGlobalFact() メソッドを実装し、抽象メソッド未実装のエラーを解消しました。
  */
 public class Donation extends AbstractSupport {
 
-  public Donation(double amount, String donorName) {
-    // 土台（親クラス）に金額と名前を渡します
-    super(amount, donorName);
+  private double cumulativeTotal;
+
+  public Donation(double amount, String firstName, String lastName, String date) {
+    super(amount, firstName, lastName, "DONATION", date);
+    this.cumulativeTotal = amount;
+  }
+
+  public void setCumulativeTotal(double total) {
+    this.cumulativeTotal = total;
+  }
+
+  @Override
+  public String getImpactBadge() {
+    if (cumulativeTotal >= 1000) return "💎 Hall of Fame";
+    if (cumulativeTotal >= 500)  return "🥇 Platinum Elite";
+    if (cumulativeTotal >= 250)  return "🥈 Gold Tier";
+    if (cumulativeTotal >= 100)  return "🥉 Silver Supporter";
+    return "🌸 Smile Partner";
+  }
+
+  @Override public String getRoleName() { return "Education Advocate"; }
+
+  /**
+   * [NEW] 寄付に関する豆知識（Global Fact）を返します。
+   * インターフェースの要件を満たすために追加しました。
+   */
+  @Override
+  public String getGlobalFact() {
+    if (amount >= 250) return "Over 250 million children and youth are currently out of school globally.";
+    if (amount >= 50)  return "Proper nutrition is proven to increase school attendance rates by up to 20%.";
+    if (amount >= 10)  return "Basic healthcare and vaccines prevent 4 million child deaths annually.";
+    return "Early childhood education provides a $16 return for every $1 invested.";
   }
 
   /**
-   * 【誠実な指標】
-   * 概算ではなく、金額に応じて「具体的に何人の子供に届くか」を計算します。
+   * 金額としきい値を、用意した画像ファイル名に合わせるための補助メソッド。
    */
+  private String getImpactLevel() {
+    if (amount >= 250) return "250";
+    if (amount >= 50)  return "50";
+    if (amount >= 10)  return "10";
+    if (amount >= 5)   return "5";
+    return "lessthanfive";
+  }
+
+  @Override
+  protected String getSpecificImpact() {
+    String level = getImpactLevel();
+    switch (level) {
+      case "250": return "Supplies for a whole classroom of 40 students! 🏫";
+      case "50":  return "Nutritious school meals for 10 children for a week! 🍱";
+      case "10":  return "Essential vaccines for 3 children! 💉";
+      case "5":   return "Two hygiene kits for students! 🧼";
+      default:    return "High-quality learning tools for a child! ✏️";
+    }
+  }
+
   @Override
   public int getPeopleHelped() {
-    if (amount >= 250) return 40; // 教室1つ分
-    if (amount >= 50)  return 10; // 1週間分の給食
-    if (amount >= 10)  return 3;  // ワクチン
-    if (amount >= 5)   return 2;  // 衛生キット
-    return 1;                     // 鉛筆
+    String level = getImpactLevel();
+    switch (level) {
+      case "250": return 40;
+      case "50":  return 10;
+      case "10":  return 3;
+      case "5":   return 2;
+      default:    return 1;
+    }
   }
 
   @Override
-  public String getImpactMessage() {
-    String gift;
-    if (amount >= 250) gift = "Supplies for a classroom of 40! 🏫";
-    else if (amount >= 50) gift = "Meals for 10 children for a week! 🍱";
-    else if (amount >= 10) gift = "Vaccines for 3 children! 💉";
-    else if (amount >= 5)  gift = "Hygiene kits for 2 students! 🧼";
-    else gift = "A high-quality pencil for a student! ✏️";
-
-    return "[Donor: " + donorName + "] Your $" + amount + " impact: " + gift;
+  public String getImagePath() {
+    return "images/Donation_" + getImpactLevel() + ".jpg";
   }
+
+  public boolean isTaxDeductible() { return amount >= 250.0; }
 }

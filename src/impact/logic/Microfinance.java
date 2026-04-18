@@ -3,37 +3,78 @@ package impact.logic;
 import impact.core.AbstractSupport;
 
 /**
- * 【役割：自立支援】
- * 寄付とは違い、起業や農業の道具を提供して「自立」を助けるクラスです。
+ * Microfinance クラス
+ * [MVC: Model Layer]
+ * 具体的な支援ロジックを「Strategy（戦略）」に委譲する、柔軟性の高い設計を採用しています。
+ * [UPDATE] getGlobalFact() を実装し、戦略カセットから豆知識を取得するようにしました。
  */
 public class Microfinance extends AbstractSupport {
 
-  public Microfinance(double amount, String donorName) {
-    // 親クラス（AbstractSupport）に金額と名前を渡します
-    super(amount, donorName);
+  /**
+   * 注入された具体的な支援戦略（農業、裁縫、医療など）を保持します。
+   */
+  private EmpowermentStrategy strategy;
+
+  /**
+   * コンストラクタ
+   * [FIX] 引数を5つ（金額、名前、苗字、日付、戦略）に設定し、他クラスとの整合性を取っています。
+   */
+  public Microfinance(double amount, String firstName, String lastName, String date, EmpowermentStrategy strategy) {
+    // 親クラス (AbstractSupport) へ共通データを渡します
+    super(amount, firstName, lastName, "MICROFINANCE", date);
+    this.strategy = strategy;
   }
 
   /**
-   * 📈 未来の笑顔（Smiles）を育てる人数を計算
+   * [Override] 投資家としての称号（バッジ）を生成します。
+   */
+  @Override
+  public String getImpactBadge() {
+    int helped = getPeopleHelped();
+    if (helped >= 15) return "🚀 Visionary Level";
+    if (helped >= 5)  return "🤝 Core Partner";
+    return "🌱 Seed Member";
+  }
+
+  /**
+   * [Override] 投資分野に応じた役割名を返します（例: Agricultural Partner）。
+   */
+  @Override
+  public String getRoleName() {
+    return strategy.getSectorName();
+  }
+
+  /**
+   * [Override] 具体的な支援内容の物語。
+   * 詳細はセットされた戦略オブジェクト（strategy）に問い合わせます。
+   */
+  @Override
+  protected String getSpecificImpact() {
+    return strategy.getInvestmentStory(amount);
+  }
+
+  /**
+   * [NEW/Override] 分野に関する豆知識（Fact）を返します。
+   * ストラテジー（カセット）に処理を委譲（Delegation）します。
+   */
+  @Override
+  public String getGlobalFact() {
+    return strategy.getGlobalFact(amount);
+  }
+
+  /**
+   * [Override] 支援人数を計算します。
    */
   @Override
   public int getPeopleHelped() {
-    if (amount >= 100) return 5; // ミシンで家族5人の生活を支える
-    if (amount >= 50)  return 8; // 共有農具で2家族（約8人）を支援
-    if (amount >= 15)  return 3; // 種や肥料で学生グループを支援
-    return 1;                    // 小さな起業家1人を支援
+    return strategy.calculateEntrepreneursHelped(amount);
   }
 
+  /**
+   * [Override] 画像パスを取得します。
+   */
   @Override
-  public String getImpactMessage() {
-    String project;
-    if (amount >= 100) project = "A sewing machine for a family of 5! 🧵";
-    else if (amount >= 50) project = "Farming tools for 2 families! 🧑‍🌾";
-    else if (amount >= 15) project = "Seeds for a small farm! 🌱";
-    else if (amount >= 5)  project = "Spice-growing startup materials! 🌶️";
-    else project = "A business literacy workshop! 📈";
-
-    // 支援者ではなく「Investor（投資家）」と呼ぶのがSakuraさんのこだわり！
-    return "[Investor: " + donorName + "] Your $" + amount + " impact: " + project;
+  public String getImagePath() {
+    return strategy.getImagePath(this.amount);
   }
 }

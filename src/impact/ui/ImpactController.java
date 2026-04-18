@@ -2,130 +2,152 @@ package impact.ui;
 
 import impact.data.ImpactModel;
 import impact.core.Supportable;
-import impact.logic.Donation;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.io.IOException;
+import impact.logic.*;
+import java.nio.file.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import impact.logic.Microfinance;
+import javax.swing.JOptionPane;
 
+/**
+ * ImpactController クラス
+ * [MVC: Controller]
+ * UIからの入力を受け取り、モデルの更新とビューの表示制御を同期させます。
+ * [UPDATE] デスクトップのテンプレートファイルからレシートを生成する機能を復元しました。
+ */
 public class ImpactController {
-  private ImpactModel model;
-  private ImpactView view;
+  private final ImpactModel model;
+  private final ImpactView view;
+  private Supportable lastSupport;
 
   public ImpactController(ImpactModel model, ImpactView view) {
     this.model = model;
     this.view = view;
-    try {
-      model.loadFromCSV("impact_data.csv");
-    } catch (Exception e) {
-      System.out.println("Ready to start! 🌸");
-    }
     setupListeners();
     refreshUI();
   }
 
+  /**
+   * 各コンポーネントにアクションリスナーを登録します。
+   */
   private void setupListeners() {
     view.getStartButton().addActionListener(e -> view.switchToInput());
-    view.getCreateButton().addActionListener(e -> addSupportFromView());
+    view.getNavMyPageButton().addActionListener(e -> view.switchToMyPage());
+    view.getBackToDonateButton().addActionListener(e -> view.switchToInput());
+
+    // 支援登録ボタン
+    view.getCreateButton().addActionListener(e -> handleSubmission());
+
+    // マイページ側の検索バー（エンターキーで検索）
     view.getSearchField().addActionListener(e -> refreshUI());
+
+    // 書類表示ボタン
+    view.getViewDocumentButton().addActionListener(e -> {
+      if (lastSupport == null) return;
+      if (lastSupport instanceof Donation) {
+        view.showDocumentModal("Official Tax Receipt", generateReceipt(lastSupport));
+      } else {
+        view.showDocumentModal("Partnership Certificate", generateCertificate(lastSupport));
+      }
+    });
   }
 
-  public void addSupportFromView() {
+  /**
+   * 支援データのバリデーション、登録、およびビューの更新を行います。
+   */
+  private void handleSubmission() {
     try {
-      String name = view.getNameText().trim();
-      String amtStr = view.getAmountText().trim();
-      if (name.isEmpty() || amtStr.isEmpty()) return;
+      String fNameRaw = view.getFirstNameText().trim();
+      String lNameRaw = view.getLastNameText().trim();
+      String amountStr = view.getAmountText().trim();
 
-      double amount = Double.parseDouble(amtStr);
-      String type = view.getSelectedType();
+      if (fNameRaw.isEmpty() || lNameRaw.isEmpty() || amountStr.isEmpty()) {
+        JOptionPane.showMessageDialog(view, "Please enter all details to proceed.");
+        return;
+      }
 
-      // 支援オブジェクトの作成
-      impact.core.AbstractSupport s = type.equals("DONATION")
-          ? new Donation(amount, name)
-          : new Microfinance(amount, name);
+      double amount = Double.parseDouble(amountStr);
+      String date = LocalDate.now().toString();
 
+      // 名前のサニタイズ（1文字目大文字）
+      String fName = fNameRaw.substring(0, 1).toUpperCase() + fNameRaw.substring(1).toLowerCase();
+      String lName = lNameRaw.substring(0, 1).toUpperCase() + lNameRaw.substring(1).toLowerCase();
+      String fullName = fName + " " + lName;
+
+      Supportable s;
+      if (view.getSelectedType().equals("DONATION")) {
+        s = new Donation(amount, fName, lName, date);
+        double total = model.calculateCumulativeTotal(fullName) + amount;
+        ((Donation) s).setCumulativeTotal(total);
+      } else {
+        String mission = view.getSelectedMission();
+        EmpowermentStrategy strategy = mission.contains("Agriculture") ? new AgricultureStrategy() :
+            mission.contains("Apparel") ? new ApparelStrategy() : new HealthStrategy();
+        s = new Microfinance(amount, fName, lName, date, strategy);
+      }
+
+      // モデルへの保存
+      this.lastSupport = s;
       model.addSupport(s);
       model.saveToCSV("impact_data.csv");
 
-      view.showRandomImage(s.getImpactMessage()); // 写真とメッセージを表示
-      view.getSearchField().setText(name); // 検索窓に名前を入れて自動更新
+      // マイページの検索欄に名前を自動セット
+      view.setSearchText(fullName);
+
+      // ビューのコンテンツ更新
+      boolean isDonation = (s instanceof Donation);
+      boolean showBtn = (isDonation && ((Donation) s).isTaxDeductible()) || !isDonation;
+      String btnText = isDonation ? "View Receipt ✨" : "View Certificate 🏆";
+
+      view.setStoryContent(s.getImpactMessage(), s.getImagePath(), s.getGlobalFact(), showBtn, btnText);
+      view.updateRecentActivity(String.format("Latest: %s supported %s with $%.2f", fName, s.getRoleName(), amount));
+
       refreshUI();
       view.clearInputs();
+
+    } catch (NumberFormatException ex) {
+      JOptionPane.showMessageDialog(view, "Please enter a valid numeric amount.");
     } catch (Exception ex) {
-      System.out.println("Error adding support: " + ex.getMessage());
+      ex.printStackTrace();
     }
   }
 
-  private void refreshUI() {
-    double totalAmt = model.getTotalAmount();
-    int totalPeople = 0;
-    for (Supportable s : model.getAllSupports()) {
-      totalPeople += s.getPeopleHelped();
-    }
-    view.setGlobalTotalText(String.format("🌍 Total: $%.2f | 🧒 %d Lives Impacted", totalAmt, totalPeople));
-
-    String searchName = view.getSearchText().trim();
-    if (searchName.isEmpty()) return;
-
-    // 🌸 履歴を全部溜めるための「魔法の箱（StringBuilder）」
-    // 以前の課題で顧客リストを全部つなげたのと同じやり方です！
-    StringBuilder allHistory = new StringBuilder();
-
-    for (Supportable s : model.getAllSupports()) {
-      if (s.getImpactMessage().toLowerCase().contains(searchName.toLowerCase())) {
-
-        double a = s.getAmount();
-        String photoPath = "resources/default.jpg";
-        String displayMessage = s.getImpactMessage();
-
-        // 250ドル以上の寄付レシート処理
-        if (s instanceof Donation && a >= 250) {
-          photoPath = "images/Donation_250.jpg";
-          try {
-            String home = System.getProperty("user.home");
-            Path path = Paths.get(home, "Desktop", "donation_receipt.txt");
-            if (Files.exists(path)) {
-              String template = Files.readString(path);
-
-              LocalDate now = LocalDate.now();
-              String formattedDate = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-              displayMessage = template
-                  .replace("[NAME]", searchName)
-                  .replace("[AMOUNT]", String.format("%.2f", a))
-                  .replace("[DATE]", formattedDate);
-            } else {
-              displayMessage = "🌸 Thank you for your generous donation of $" + String.format("%.2f", a) + "!\n" + s.getImpactMessage();
-            }
-          } catch (IOException e) {
-            displayMessage = "⚠️ [Error] Could not read receipt file.\n" + s.getImpactMessage();
-          }
-        }
-        // 写真の条件分岐（ここはそのまま）
-        else if (s instanceof Donation) {
-          if (a >= 250) photoPath = "images/Donation_250.jpg";
-          else if (a >= 50) photoPath = "images/Donaiton_50.jpg";
-          else if (a >= 10) photoPath = "images/Donation_10.jpg";
-          else photoPath = "images/Donation_lessthanfive.jpg";
-        }
-        else if (s instanceof Microfinance) {
-          if (a >= 100) photoPath = "images/Microfinance_100.jpg";
-          else if (a >= 50) photoPath = "images/MIcrofinance_50.jpg";
-          else if (a >= 15) photoPath = "images/Microfinance_15.jpg"; // アイコン変えたところ！
-          else photoPath = "images/Microfinance_5.jpg";
-        }
-
-        // ① メイン画面（写真とメッセージ）を更新
-        view.setStoryContent("", photoPath);
-
-        // ② 見つかったメッセージを履歴の箱にどんどん追加していく
-        allHistory.append(displayMessage).append("\n------------------\n");
+  /**
+   * 受領証の生成
+   * [FIX] デスクトップの donation_receipt.txt テンプレートを読み込むように修正しました。
+   */
+  private String generateReceipt(Supportable s) {
+    String desktopPath = System.getProperty("user.home") + "/Desktop/donation_receipt.txt";
+    try {
+      Path path = Paths.get(desktopPath);
+      if (Files.exists(path)) {
+        String content = Files.readString(path);
+        // テンプレート内の変数を実際のデータに置換
+        return content.replace("[NAME]", s.getFullName())
+            .replace("[AMOUNT]", String.format("%.2f", s.getAmount()))
+            .replace("[DATE]", s.getDate());
       }
+    } catch (Exception e) {
+      // ファイル読み込み失敗時はフォールバックのテキストを表示
     }
 
-    // 🌸 ループが終わった後に、溜まった履歴を全部表示する！
-    view.setHistoryText(allHistory.toString());
-  }}
+    // テンプレートがない場合のデフォルト形式
+    return String.format("--- SMILELOG OFFICIAL RECEIPT ---\n\nDonor: %s\nAmount: $%.2f\nDate: %s\n\nKindness transforms lives.",
+        s.getFullName(), s.getAmount(), s.getDate());
+  }
+
+  private String generateCertificate(Supportable s) {
+    return String.format("====================================\n   PARTNERSHIP CERTIFICATE\n====================================\n\nRecipient: %s\nSector: %s\nAmount: $%.2f\nDate: %s\n\nBuilding the future together.\n====================================",
+        s.getFullName(), s.getRoleName(), s.getAmount(), s.getDate());
+  }
+
+  /**
+   * 画面上の統計と履歴リストを最新状態に更新します。
+   */
+  private void refreshUI() {
+    view.setGlobalTotalText(String.format("Raised: $%,.2f", model.getTotalAmount()));
+    view.updateProgress((int)model.getCompletionPercentage());
+
+    // 検索バーに入っている名前で履歴を更新
+    String searchWord = view.getSearchText();
+    view.setHistoryText(model.getConciseHistory(searchWord));
+  }
+}
