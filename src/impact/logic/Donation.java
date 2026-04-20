@@ -79,7 +79,7 @@ public class Donation extends AbstractSupport {
 
   @Override
   public String getImagePath() {
-    return "images/Donation_" + getImpactLevel() + ".jpg";
+    return "/images/Donation_" + getImpactLevel() + ".jpg";
   }
 
   public boolean isTaxDeductible() { return amount >= 250.0; }

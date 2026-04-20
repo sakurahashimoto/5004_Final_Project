@@ -59,12 +59,31 @@ public class ImpactController {
       String lNameRaw = view.getLastNameText().trim();
       String amountStr = view.getAmountText().trim();
 
-      if (fNameRaw.isEmpty() || lNameRaw.isEmpty() || amountStr.isEmpty()) {
-        JOptionPane.showMessageDialog(view, "Please enter all details to proceed.");
+      // --- 🌸 【バリデーション：名前のチェック】 🌸 ---
+      // || (OR) を使い、姓名どちらかが空ならエラーを出します。
+      if (fNameRaw.isEmpty() || lNameRaw.isEmpty()) {
+        notifyError("Please enter both First Name and Last Name.");
+        return; // 保存処理に進まず、ここで終了
+      }
+
+      // --- 🌸 【バリデーション：金額のチェック】 🌸 ---
+      if (amountStr.isEmpty()) {
+        notifyError("Please enter a contribution amount.");
         return;
       }
 
-      double amount = Double.parseDouble(amountStr);
+      double amount;
+      try {
+        amount = Double.parseDouble(amountStr);
+        if (amount <= 0) {
+          notifyError("Amount must be a positive number.");
+          return;
+        }
+      } catch (NumberFormatException ex) {
+        notifyError("Invalid amount format. Please use numbers only (e.g., 250.00).");
+        return;
+      }
+
       String date = LocalDate.now().toString();
 
       // 名前のサニタイズ（1文字目大文字）
@@ -108,6 +127,17 @@ public class ImpactController {
     } catch (Exception ex) {
       ex.printStackTrace();
     }
+  }
+  /**
+   * [NEW] ユーザーにエラーを通知するメソッド
+   * コントローラー内に定義することで、ビューをいじらずにエラー表示機能を強化できます。
+   */
+  private void notifyError(String message) {
+    // 1. ポップアップで警告を出す (標準Java機能)
+    JOptionPane.showMessageDialog(view, message, "Action Required", JOptionPane.WARNING_MESSAGE);
+
+    // 2. ビューにすでにある updateRecentActivity を使って、画面のログにも警告を表示
+    //view.updateRecentActivity("⚠️ ERROR: " + message);
   }
 
   /**

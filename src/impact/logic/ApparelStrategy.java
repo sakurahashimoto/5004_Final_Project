@@ -43,12 +43,6 @@ public class ApparelStrategy implements EmpowermentStrategy {
 
   @Override
   public String getImagePath(double amount) {
-    String level;
-    if (amount >= 100) level = "100";
-    else if (amount >= 50) level = "50";
-    else if (amount >= 15) level = "15";
-    else level = "lessthanfive";
-
-    return "images/Microfinance_" + level + ".jpg";
+    return "/images/Microfinance_100.jpg";
   }
 }

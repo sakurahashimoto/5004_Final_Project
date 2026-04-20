@@ -1,5 +1,6 @@
 package impact.ui;
 
+import java.net.URL;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -7,21 +8,17 @@ import java.awt.*;
 import java.io.File;
 
 /**
- * ImpactView クラス (Humanitarian Final Edition - Perfect Screen Fit)
- * [MVC: View Layer]
- * 社会貢献の重みを感じさせるプレミアムデザインと、直感的な操作性を両立。
- * スクロール不要で、進捗から履歴まで一画面で確認できる完成版です。
+ * ImpactView クラス (Humanitarian Final Edition - Layout Fix)
+ * [FIX] マイクロファイナンス選択時にボタンが消える（潰れる）問題を修正しました。
  */
 public class ImpactView extends JFrame {
 
   // --- 🌸 【フォトギャラリー用のファイルパス設定】 🌸 ---
-  // images フォルダに写真を入れ、その名前をここに記載してください。
-  private final String GALLERY_PATH_1 = "images/gallery_1.jpg";
-  private final String GALLERY_PATH_2 = "images/gallery_2.jpg";
-  private final String GALLERY_PATH_3 = "images/gallery_3.jpg";
-  // ---------------------------------------------------
+  private final String GALLERY_PATH_1 = "/images/gallery_1.jpg";
+  private final String GALLERY_PATH_2 = "/images/gallery_2.jpg";
+  private final String GALLERY_PATH_3 = "/images/gallery_3.jpg";
 
-  // カラーパレット (Humanitarian Palette)
+  // カラーパレット
   private final Color SL_NAVY = new Color(30, 41, 59);
   private final Color SL_ROSE = new Color(244, 114, 114);
   private final Color BG_CREAM = new Color(252, 251, 247);
@@ -32,9 +29,8 @@ public class ImpactView extends JFrame {
   private CardLayout cardLayout = new CardLayout();
   private JPanel cardPanel = new JPanel(cardLayout);
 
-  // 入力パーツ
   private JTextField fName = new JTextField(), lName = new JTextField(), amtField = new JTextField();
-  private JTextField searchField = new JTextField(); // マイページ検索用
+  private JTextField searchField = new JTextField();
 
   private JButton donateToggle = new JButton("DONATION 🎁");
   private JButton microToggle = new JButton("MICROFINANCE 🤝");
@@ -58,10 +54,14 @@ public class ImpactView extends JFrame {
   private JPanel photoArea = new JPanel(new BorderLayout());
   private JLabel imageLabel = new JLabel();
 
-  // ダッシュボード・コンポーネント（表示の競合を防ぐため一箇所で管理）
+  // ダッシュボード
   private JLabel globalTotalLabel = new JLabel("$0.00");
+  private JLabel goalLabel = new JLabel("Target Goal: $10,000.00");
   private JProgressBar progressBar = new JProgressBar(0, 100);
   private JLabel progressPercentLabel = new JLabel("0%");
+
+  // [NEW] レイアウト崩れを防ぐための親パネル参照
+  private JPanel inputCard;
 
   public ImpactView() {
     setTitle("SmileLog | Building a Brighter Future");
@@ -79,7 +79,7 @@ public class ImpactView extends JFrame {
   private void setupToggleLogic() {
     donateToggle.setFocusPainted(false);
     microToggle.setFocusPainted(false);
-    Font toggleFont = new Font("SansSerif", Font.BOLD, 11);
+    Font toggleFont = new Font("SansSerif", Font.BOLD, 12);
     donateToggle.setFont(toggleFont);
     microToggle.setFont(toggleFont);
     updateToggleStyles();
@@ -88,26 +88,34 @@ public class ImpactView extends JFrame {
       currentType = "DONATION";
       missionGroup.setVisible(false);
       updateToggleStyles();
-      revalidate(); repaint();
+      // コンテナ全体を再描画して、ボタンの消失を防ぐ
+      inputCard.revalidate();
+      inputCard.repaint();
     });
     microToggle.addActionListener(e -> {
       currentType = "MICROFINANCE";
       missionGroup.setVisible(true);
       updateToggleStyles();
-      revalidate(); repaint();
+      inputCard.revalidate();
+      inputCard.repaint();
     });
   }
 
   private void updateToggleStyles() {
     boolean isDonation = currentType.equals("DONATION");
+
+    // 背景と文字色
     donateToggle.setBackground(isDonation ? SL_NAVY : Color.WHITE);
     donateToggle.setForeground(isDonation ? Color.WHITE : SL_NAVY);
-    donateToggle.setOpaque(true);
-    donateToggle.setBorder(new LineBorder(isDonation ? SL_NAVY : BORDER_SOFT));
     microToggle.setBackground(!isDonation ? SL_NAVY : Color.WHITE);
     microToggle.setForeground(!isDonation ? Color.WHITE : SL_NAVY);
+
+    // 枠線の強調
+    donateToggle.setBorder(new LineBorder(isDonation ? SL_NAVY : BORDER_SOFT, 2));
+    microToggle.setBorder(new LineBorder(!isDonation ? SL_NAVY : BORDER_SOFT, 2));
+
+    donateToggle.setOpaque(true);
     microToggle.setOpaque(true);
-    microToggle.setBorder(new LineBorder(!isDonation ? SL_NAVY : BORDER_SOFT));
   }
 
   private void setupWelcomeScreen() {
@@ -150,28 +158,34 @@ public class ImpactView extends JFrame {
     barPanel.add(progressBar, BorderLayout.CENTER); barPanel.add(progressPercentLabel, BorderLayout.EAST);
     left.add(lbl, BorderLayout.NORTH); left.add(barPanel, BorderLayout.CENTER);
 
-    globalTotalLabel.setFont(new Font("Serif", Font.BOLD, 44)); globalTotalLabel.setForeground(SL_NAVY);
+    globalTotalLabel.setFont(new Font("Serif", Font.BOLD, 40)); globalTotalLabel.setForeground(SL_NAVY);
+    goalLabel.setFont(new Font("SansSerif", Font.BOLD, 12)); goalLabel.setForeground(TEXT_SLATE);
+
     JPanel right = new JPanel(new BorderLayout()); right.setOpaque(false);
     JLabel rLbl = new JLabel("Raised Globally:", SwingConstants.RIGHT); rLbl.setFont(new Font("SansSerif", Font.BOLD, 11));
-    right.add(rLbl, BorderLayout.NORTH); right.add(globalTotalLabel, BorderLayout.CENTER);
-
+    JPanel amountPanel = new JPanel(new GridLayout(2, 1, 0, 0)); amountPanel.setOpaque(false);
+    amountPanel.add(globalTotalLabel);
+    JPanel goalAlign = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0)); goalAlign.setOpaque(false);
+    goalAlign.add(goalLabel);
+    amountPanel.add(goalAlign);
+    right.add(rLbl, BorderLayout.NORTH); right.add(amountPanel, BorderLayout.CENTER);
     card.add(left, BorderLayout.CENTER); card.add(right, BorderLayout.EAST);
     return card;
   }
 
-  private JPanel createGalleryItem(String path, String caption) {
+  private JPanel createGalleryItem(String path) {
     JPanel item = new JPanel(new BorderLayout(0, 5)); item.setOpaque(false);
-    JLabel img = new JLabel(); img.setPreferredSize(new Dimension(150, 90));
+    JLabel img = new JLabel();
+    img.setPreferredSize(new Dimension(200, 200));
     img.setBorder(new LineBorder(BORDER_SOFT)); img.setHorizontalAlignment(SwingConstants.CENTER);
-    File f = new File(path);
-    if (f.exists()) {
-      img.setIcon(new ImageIcon(new ImageIcon(path).getImage().getScaledInstance(150, 90, Image.SCALE_SMOOTH)));
+    URL image_path = getClass().getResource(path);
+    if (image_path != null) {
+      img.setIcon(new ImageIcon(new ImageIcon(image_path).getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH)));
     } else {
       img.setText("📷 Photo Slot"); img.setFont(new Font("SansSerif", Font.PLAIN, 9));
       img.setBackground(Color.WHITE); img.setOpaque(true);
     }
-    JLabel cap = new JLabel(caption, SwingConstants.CENTER); cap.setFont(new Font("SansSerif", Font.PLAIN, 10));
-    cap.setForeground(TEXT_SLATE); item.add(img, BorderLayout.CENTER); item.add(cap, BorderLayout.SOUTH);
+    item.add(img, BorderLayout.CENTER);
     return item;
   }
 
@@ -184,13 +198,12 @@ public class ImpactView extends JFrame {
     GridBagConstraints mainGbc = new GridBagConstraints();
     mainGbc.fill = GridBagConstraints.BOTH;
 
-    // 1. ダッシュボード最上部
     GridBagConstraints topGbc = new GridBagConstraints();
     topGbc.gridx = 0; topGbc.gridy = 0; topGbc.gridwidth = 2; topGbc.weightx = 1.0;
     topGbc.fill = GridBagConstraints.HORIZONTAL; topGbc.insets = new Insets(0, 0, 20, 0);
     body.add(createDashboardProgressCard(), topGbc);
 
-    // 2. 左側: 視覚的な報告とギャラリー
+    // --- 🌸 【左側パネル】 🌸 ---
     JPanel leftSide = new JPanel(new GridBagLayout()); leftSide.setOpaque(false);
     GridBagConstraints lGbc = new GridBagConstraints();
     lGbc.fill = GridBagConstraints.HORIZONTAL; lGbc.weightx = 1.0; lGbc.gridx = 0; lGbc.anchor = GridBagConstraints.NORTH;
@@ -213,36 +226,48 @@ public class ImpactView extends JFrame {
 
     JPanel galleryPanel = new JPanel(new GridLayout(1, 3, 15, 0)); galleryPanel.setOpaque(false);
     galleryPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
-    galleryPanel.add(createGalleryItem(GALLERY_PATH_1, "Classroom Visit"));
-    galleryPanel.add(createGalleryItem(GALLERY_PATH_2, "Medical Supplies"));
-    galleryPanel.add(createGalleryItem(GALLERY_PATH_3, "Future Tailor"));
+    galleryPanel.add(createGalleryItem(GALLERY_PATH_1));
+    galleryPanel.add(createGalleryItem(GALLERY_PATH_2));
+    galleryPanel.add(createGalleryItem(GALLERY_PATH_3));
 
     lGbc.gridy = 0; lGbc.insets = new Insets(0, 0, 15, 0); leftSide.add(photoArea, lGbc);
     lGbc.gridy = 1; lGbc.insets = new Insets(0, 0, 0, 0); leftSide.add(insightCard, lGbc);
     lGbc.gridy = 2; leftSide.add(galleryPanel, lGbc);
-    lGbc.gridy = 3; lGbc.weighty = 1.0; leftSide.add(new Box.Filler(new Dimension(0,0), new Dimension(0,0), new Dimension(0, 0)), lGbc);
 
-    // 3. 右側: 支援フォームと最新履歴
+    // --- 🌸 【右側パネル：入力フォーム】 🌸 ---
     JPanel rightSide = new JPanel(new GridBagLayout()); rightSide.setOpaque(false);
     GridBagConstraints rGbc = new GridBagConstraints();
     rGbc.fill = GridBagConstraints.HORIZONTAL; rGbc.weightx = 1.0; rGbc.gridx = 0; rGbc.anchor = GridBagConstraints.NORTH;
-    JPanel inputCard = new JPanel(new BorderLayout(0, 15)); inputCard.setBackground(Color.WHITE);
+
+    // [FIX] inputCard の参照を保持し、再描画を確実にします
+    inputCard = new JPanel(new BorderLayout(0, 15)); inputCard.setBackground(Color.WHITE);
     inputCard.setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_SOFT, 1, true), new EmptyBorder(25,35,25,35)));
 
     JPanel fds = new JPanel(new GridBagLayout()); fds.setOpaque(false);
     GridBagConstraints g = new GridBagConstraints(); g.fill = GridBagConstraints.HORIZONTAL; g.weightx = 1.0; g.gridx = 0; g.gridy = 0;
+
+    // [FIX] ボタンパネル：最低高さを設定して潰れないようにします
     JPanel tp = new JPanel(new GridLayout(1, 2, 10, 0)); tp.setOpaque(false);
-    donateToggle.setPreferredSize(new Dimension(140, 48)); microToggle.setPreferredSize(new Dimension(140, 48));
-    tp.add(donateToggle); tp.add(microToggle); fds.add(tp, g); g.gridy++; g.insets = new Insets(15,0,0,0);
+    Dimension btnSize = new Dimension(140, 50);
+    donateToggle.setPreferredSize(btnSize); donateToggle.setMinimumSize(btnSize);
+    microToggle.setPreferredSize(btnSize); microToggle.setMinimumSize(btnSize);
+    tp.add(donateToggle); tp.add(microToggle);
+
+    fds.add(tp, g); g.gridy++; g.insets = new Insets(15,0,0,0);
+
     missionGroup = new JPanel(new BorderLayout(0, 5)); missionGroup.setOpaque(false);
-    missionGroup.add(new JLabel("SELECT MISSION SECTOR"), BorderLayout.NORTH);
+    JLabel misLbl = new JLabel("SELECT MISSION SECTOR"); misLbl.setFont(new Font("SansSerif", Font.BOLD, 10));
+    missionGroup.add(misLbl, BorderLayout.NORTH);
     missionGroup.add(missionBox, BorderLayout.CENTER); missionGroup.setVisible(false);
+
     fds.add(missionGroup, g); g.gridy++;
     fds.add(createInputGroup("FIRST NAME", fName), g); g.gridy++;
     fds.add(createInputGroup("LAST NAME", lName), g); g.gridy++;
     fds.add(createInputGroup("GIFT AMOUNT ($)", amtField), g);
+
     createBtn.setBackground(SL_NAVY); createBtn.setForeground(Color.WHITE); createBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
     createBtn.setPreferredSize(new Dimension(250, 60)); createBtn.setOpaque(true); createBtn.setBorderPainted(false);
+
     inputCard.add(new JLabel("<html><h3 style='color:#1e293b; font-family:serif; margin-bottom:5px;'>Join the Mission</h3></html>"), BorderLayout.NORTH);
     inputCard.add(fds, BorderLayout.CENTER); inputCard.add(createBtn, BorderLayout.SOUTH);
 
@@ -257,7 +282,6 @@ public class ImpactView extends JFrame {
     rGbc.gridy = 0; rightSide.add(inputCard, rGbc);
     rGbc.gridy = 1; rightSide.add(dw, rGbc);
     rGbc.gridy = 2; rightSide.add(qh, rGbc);
-    rGbc.gridy = 3; rGbc.weighty = 1.0; rightSide.add(new Box.Filler(new Dimension(0,0), new Dimension(0,0), new Dimension(0, 0)), rGbc);
 
     mainGbc.gridy = 1; mainGbc.weighty = 1.0;
     mainGbc.weightx = 0.50; mainGbc.gridx = 0; body.add(leftSide, mainGbc);
@@ -270,8 +294,15 @@ public class ImpactView extends JFrame {
   private void setInitialState() {
     photoArea.removeAll();
     JPanel wc = new JPanel(new GridBagLayout()); wc.setBackground(new Color(255, 245, 247));
-    JLabel t = new JLabel("✨ Impact Dashboard"); t.setFont(new Font("Serif", Font.BOLD, 26));
-    wc.add(t); photoArea.add(wc, BorderLayout.CENTER);
+    URL image_path = getClass().getResource("/images/default_image.jpg");
+    JLabel img = new JLabel();
+    if (image_path != null) {
+      img.setIcon(new ImageIcon(new ImageIcon(image_path).getImage().getScaledInstance(-1, 250, Image.SCALE_SMOOTH)));
+    } else {
+      img.setText("✨ Impact Dashboard"); img.setFont(new Font("Serif", Font.BOLD, 26));
+      img.setBackground(Color.WHITE); img.setOpaque(true);
+    }
+    wc.add(img); photoArea.add(wc, BorderLayout.CENTER);
     storyArea.setText("Every contribution writes a life story. Choose a mission above to begin.");
     factArea.setText("Every $1 invested in childhood education yields $16 in local economic returns.");
   }
@@ -332,11 +363,13 @@ public class ImpactView extends JFrame {
     storyArea.setText(story); factArea.setText(fact);
     viewDocBtn.setText(btnText); viewDocBtn.setVisible(showBtn);
     photoArea.removeAll();
+    JPanel wc = new JPanel(new GridBagLayout()); wc.setBackground(new Color(255, 245, 247));
     try {
-      File f = new File(imagePath);
-      if (f.exists()) {
-        ImageIcon icon = new ImageIcon(new ImageIcon(imagePath).getImage().getScaledInstance(500, 300, Image.SCALE_SMOOTH));
-        imageLabel.setIcon(icon); photoArea.add(imageLabel, BorderLayout.CENTER);
+      URL image_url = getClass().getResource(imagePath);
+      if (image_url != null) {
+        ImageIcon icon = new ImageIcon(new ImageIcon(image_url).getImage().getScaledInstance(-1, 250, Image.SCALE_SMOOTH));
+        imageLabel.setIcon(icon);
+        wc.add(imageLabel); photoArea.add(wc, BorderLayout.CENTER);
       } else {
         JLabel pl = new JLabel("<html><div style='text-align:center;'>Mission Activity Visualized...</div></html>");
         pl.setHorizontalAlignment(SwingConstants.CENTER); photoArea.add(pl, BorderLayout.CENTER);
@@ -352,10 +385,7 @@ public class ImpactView extends JFrame {
   public String getLastNameText() { return lName.getText(); }
   public String getAmountText() { return amtField.getText(); }
   public String getSearchText() { return searchField.getText(); }
-
-  /** [NEW] 検索欄に名前をセットするためのメソッド */
   public void setSearchText(String t) { searchField.setText(t); }
-
   public JButton getStartButton() { return startBtn; }
   public JButton getCreateButton() { return createBtn; }
   public JButton getViewDocumentButton() { return viewDocBtn; }

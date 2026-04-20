@@ -77,4 +77,5 @@ public class Microfinance extends AbstractSupport {
   public String getImagePath() {
     return strategy.getImagePath(this.amount);
   }
+
 }
