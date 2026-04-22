@@ -3,30 +3,36 @@ package impact.logic;
 import impact.core.AbstractSupport;
 
 /**
- * Microfinance クラス
- * [MVC: Model Layer]
- * 具体的な支援ロジックを「Strategy（戦略）」に委譲する、柔軟性の高い設計を採用しています。
- * [UPDATE] getGlobalFact() を実装し、戦略カセットから豆知識を取得するようにしました。
+ * Microfinance Class
+ * This class represents a micro-loan support type. It utilizes the Strategy Pattern
+ * to delegate specific impact calculations and storytelling to a "strategy" object,
+ * allowing for high flexibility across different sectors (Agriculture, Apparel, Health, etc.).
  */
 public class Microfinance extends AbstractSupport {
 
   /**
-   * 注入された具体的な支援戦略（農業、裁縫、医療など）を保持します。
+   * The specific empowerment strategy (e.g., Agriculture, Apparel, Health)
+   * injected at runtime to handle sector-specific logic.
    */
   private EmpowermentStrategy strategy;
 
   /**
-   * コンストラクタ
-   * [FIX] 引数を5つ（金額、名前、苗字、日付、戦略）に設定し、他クラスとの整合性を取っています。
+   * Constructs a new Microfinance instance.
+   * @param amount The loan amount.
+   * @param firstName The supporter's first name.
+   * @param lastName The supporter's last name.
+   * @param date The date the support was recorded.
+   * @param strategy The specific sector strategy to be used for impact calculation.
    */
   public Microfinance(double amount, String firstName, String lastName, String date, EmpowermentStrategy strategy) {
-    // 親クラス (AbstractSupport) へ共通データを渡します
+    // Pass common data to the parent class (AbstractSupport)
     super(amount, firstName, lastName, "MICROFINANCE", date);
     this.strategy = strategy;
   }
 
   /**
-   * [Override] 投資家としての称号（バッジ）を生成します。
+   * Returns an investor-style badge title based on the number of entrepreneurs helped.
+   * @return A string representing the supporter's impact tier.
    */
   @Override
   public String getImpactBadge() {
@@ -37,7 +43,8 @@ public class Microfinance extends AbstractSupport {
   }
 
   /**
-   * [Override] 投資分野に応じた役割名を返します（例: Agricultural Partner）。
+   * Returns the role name specific to the current investment sector.
+   * @return The sector designation string provided by the strategy.
    */
   @Override
   public String getRoleName() {
@@ -45,8 +52,9 @@ public class Microfinance extends AbstractSupport {
   }
 
   /**
-   * [Override] 具体的な支援内容の物語。
-   * 詳細はセットされた戦略オブジェクト（strategy）に問い合わせます。
+   * Provides the specific narrative of the investment impact.
+   * This logic is delegated to the specific strategy object.
+   * @return A string describing the tangible investment story.
    */
   @Override
   protected String getSpecificImpact() {
@@ -54,8 +62,9 @@ public class Microfinance extends AbstractSupport {
   }
 
   /**
-   * [NEW/Override] 分野に関する豆知識（Fact）を返します。
-   * ストラテジー（カセット）に処理を委譲（Delegation）します。
+   * [NEW/Override] Retrieves a global fact or statistic related to the specific sector.
+   * Uses Delegation to pull data from the injected strategy "cassette."
+   * @return A relevant global fact string.
    */
   @Override
   public String getGlobalFact() {
@@ -63,7 +72,8 @@ public class Microfinance extends AbstractSupport {
   }
 
   /**
-   * [Override] 支援人数を計算します。
+   * Calculates the number of entrepreneurs assisted by this loan.
+   * @return The count of people helped as determined by the strategy.
    */
   @Override
   public int getPeopleHelped() {
@@ -71,7 +81,8 @@ public class Microfinance extends AbstractSupport {
   }
 
   /**
-   * [Override] 画像パスを取得します。
+   * Returns the file path for the representative impact image.
+   * @return The string path to the image resource provided by the strategy.
    */
   @Override
   public String getImagePath() {

@@ -1,36 +1,46 @@
 package impact.logic;
 
 /**
- * EmpowermentStrategy インターフェース
- * [Strategy Pattern - Interface]
- * マイクロファイナンスの具体的な支援ロジックを「カセット」として定義するための契約書です。
+ * EmpowermentStrategy Interface
+ * Defines the contract for specific microfinance support logics.
+ * Acts as a "swappable" component to determine how impact is calculated
+ * and narrated for different business sectors.
  */
 public interface EmpowermentStrategy {
 
   /**
-   * 支援金額に応じた具体的な「物語（ストーリー）」を返します。
-   * [UPDATE] ここからは豆知識を除去し、純粋なストーリーのみを返すようにします。
+   * Returns a specific "impact story" based on the contribution amount.
+   * This focuses on the tangible narrative of the investment.
+   * @param amount The financial contribution.
+   * @return A string describing the investment story.
    */
   String getInvestmentStory(double amount);
 
   /**
-   * [NEW] 支援分野に関する「豆知識（Fact）」を返します。
-   * これにより、UI上でストーリーとは別の場所に「💡 DID YOU KNOW?」として表示可能になります。
+   * Returns a global statistic or "Did You Know?" fact related to the sector.
+   * Allows the UI to display educational insights separately from the impact story.
+   * @param amount The financial contribution.
+   * @return A relevant global fact string.
    */
   String getGlobalFact(double amount);
 
   /**
-   * 何人の起業家を支援できたかを計算します。
+   * Calculates the number of entrepreneurs supported by the given amount.
+   * @param amount The financial contribution.
+   * @return The count of entrepreneurs helped.
    */
   int calculateEntrepreneursHelped(double amount);
 
   /**
-   * 支援分野の名称（役割名）を返します（例: Agricultural Partner）。
+   * Returns the formal name of the sector (e.g., "Agricultural Partner").
+   * @return The sector designation string.
    */
   String getSectorName();
 
   /**
-   * 支援内容に合致した画像のパスを返します。
+   * Provides the file path for an image that matches the support context.
+   * @param amount The financial contribution.
+   * @return The string path to the image asset.
    */
   String getImagePath(double amount);
 }

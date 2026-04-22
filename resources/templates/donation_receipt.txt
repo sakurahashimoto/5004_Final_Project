@@ -1,0 +1,32 @@
+============================================================
+                OFFICIAL DONATION RECEIPT
+============================================================
+
+Organization Information:
+-------------------------
+Name: SmileLog Support
+Tax ID (EIN): 00-1234567
+Address: 123 Sakura way, San Jose, CA
+
+Donor Information:
+-------------------------
+Donor Name: [NAME]
+Donation Amount: $[AMOUNT]
+Date of Receipt: [DATE]
+
+Legal Statement:
+-------------------------
+This receipt acknowledges that SmileLog Support is a
+qualified organization under section 501(c)(3) of the Internal
+Revenue Code.
+
+No goods or services were provided by the organization in 
+return for the contribution. Please keep this for your records.
+
+Thank you for your generous support to help children express 
+themselves and regain confidence through art and education.
+
+------------------------------------------------------------
+Authorized Signature: _________________________
+SmileLog Support Office
+============================================================

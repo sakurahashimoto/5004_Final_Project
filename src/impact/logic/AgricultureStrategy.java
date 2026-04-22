@@ -1,14 +1,15 @@
 package impact.logic;
 
 /**
- * AgricultureStrategy クラス
- * [Strategy Pattern: Concrete Strategy]
- * 農業分野における支援ロジックと画像パスの生成を担当します。
+ * AgricultureStrategy
+ * Responsible for defining support logic, investment narratives, and image paths
+ * specifically for the agricultural sector.
  */
 public class AgricultureStrategy implements EmpowermentStrategy {
 
   /**
-   * 分野名を返します。
+   * Returns the official name of this sector.
+   * @return The sector designation string.
    */
   @Override
   public String getSectorName() {
@@ -16,7 +17,9 @@ public class AgricultureStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * 金額に応じた支援人数（起業家数）を計算します。
+   * Calculates the number of entrepreneurs supported based on the contribution amount.
+   * @param amount The financial contribution.
+   * @return The number of individuals positively impacted.
    */
   @Override
   public int calculateEntrepreneursHelped(double amount) {
@@ -27,8 +30,10 @@ public class AgricultureStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * 金額に応じた具体的な投資ストーリーを返します。
-   * [UPDATE] 豆知識（Fact）は getGlobalFact に分離したため、ここでは純粋な物語のみを返します。
+   * Generates a specific investment narrative based on the contribution amount.
+   * Focuses on the "Story" aspect of the impact.
+   * @param amount The financial contribution.
+   * @return A string describing the tangible items or services funded.
    */
   @Override
   public String getInvestmentStory(double amount) {
@@ -45,7 +50,9 @@ public class AgricultureStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * [NEW] 農業に関する豆知識（Global Fact）を取得します。
+   * Retrieves a global statistic or fact related to agriculture.
+   * @param amount The financial contribution (used to scale the fact's relevance).
+   * @return A relevant global fact string.
    */
   @Override
   public String getGlobalFact(double amount) {
@@ -59,11 +66,14 @@ public class AgricultureStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * 金額に応じた画像パスを生成します。
-   * スクリーンショットのファイル名（Microfinance_100.jpg 等）に合わせました。
+   * Returns the file path for the image associated with the impact level.
+   * Standardized to match system screenshot naming conventions.
+   * @param amount The financial contribution.
+   * @return The string path to the image resource.
    */
   @Override
   public String getImagePath(double amount) {
+    // Standardized to a specific asset for the presentation demo
     return "/images/Microfinance_50.jpg";
   }
 }

@@ -14,96 +14,122 @@ import impact.logic.HealthStrategy;
 
 /**
  * SmileLogLogicTest
- * JUnit: アプリケーションの計算ロジック、バッジ生成、および戦略パターンの正確性を検証します。
- * * ユニットテストは「Arrange (準備)」「Act (実行)」「Assert (検証)」の3ステップで構成されます。
+ * JUnit suite for validating the core application logic, badge generation,
+ * and the accuracy of various strategy implementations.
+ * Tests are structured using the Arrange-Act-Assert (AAA) pattern to ensure
+ * clarity and reliability.
  */
 class SmileLogLogicTest {
 
   private ImpactModel model;
 
   /**
-   * 各テストメソッドが実行される前に、毎回呼ばれる準備メソッドです。
-   * テストごとにデータが混ざらないよう、常に新しいモデルをインスタンス化します。
+   * Setup method executed before each test case.
+   * Instantiates a fresh ImpactModel to ensure test isolation and prevent
+   * data contamination between test methods.
    */
   @BeforeEach
   void setUp() {
     model = new ImpactModel();
   }
 
+  /**
+   * Verifies the threshold logic for donor badge promotion based on
+   * cumulative contribution totals.
+   */
   @Test
-  @DisplayName("寄付：累計額に応じたバッジ昇格ロジックの検証")
+  @DisplayName("Donation: Validate badge tier promotion based on cumulative totals")
   void testDonationBadgeTiers() {
     // Arrange & Act
     Donation d = new Donation(0.0, "Sakura", "Hashimoto", "2026-04-18");
 
-    // Assert: 50ドル未満
+    // Assert: Under $50
     d.setCumulativeTotal(49.0);
-    assertTrue(d.getImpactBadge().contains("Smile"), "50ドル未満はSmile Partnerであるべきです");
+    assertTrue(d.getImpactBadge().contains("Smile"), "Amounts under $50 should result in 'Smile Partner'.");
 
-    // Assert: 100ドル
+    // Assert: $100
     d.setCumulativeTotal(100.0);
-    assertTrue(d.getImpactBadge().contains("Silver"), "100ドルはSilver Supporterであるべきです");
+    assertTrue(d.getImpactBadge().contains("Silver"), "An amount of $100 should result in 'Silver Supporter'.");
 
-    // Assert: 500ドル
+    // Assert: $500
     d.setCumulativeTotal(500.0);
-    assertTrue(d.getImpactBadge().contains("Platinum"), "500ドルはPlatinum Eliteであるべきです");
+    assertTrue(d.getImpactBadge().contains("Platinum"), "An amount of $500 should result in 'Platinum Elite'.");
 
-    // Assert: 1000ドル
+    // Assert: $1000
     d.setCumulativeTotal(1000.0);
-    assertTrue(d.getImpactBadge().contains("Hall of Fame"), "1000ドルは殿堂入り（Hall of Fame）であるべきです");
+    assertTrue(d.getImpactBadge().contains("Hall of Fame"), "Amounts of $1000 and above should result in 'Hall of Fame'.");
   }
 
+  /**
+   * Validates the calculation logic of the AgricultureStrategy, ensuring
+   * the correct number of entrepreneurs helped for specific dollar amounts.
+   */
   @Test
-  @DisplayName("農業戦略：金額に対する支援人数の計算ロジック検証")
+  @DisplayName("Agriculture Strategy: Validate entrepreneur count calculation logic")
   void testAgricultureStrategyCalculation() {
     AgricultureStrategy agri = new AgricultureStrategy();
 
-    // 農業支援の各ランクの計算が正しいか検証
-    assertEquals(15, agri.calculateEntrepreneursHelped(100.0), "100ドルで15人の起業家を支援できるはずです");
-    assertEquals(5, agri.calculateEntrepreneursHelped(50.0), "50ドルで5人の起業家を支援できるはずです");
-    assertEquals(1, agri.calculateEntrepreneursHelped(1.0), "少額でも最低1人は支援されるはずです");
+    // Verify support ranks
+    assertEquals(15, agri.calculateEntrepreneursHelped(100.0), "A $100 contribution should help 15 entrepreneurs.");
+    assertEquals(5, agri.calculateEntrepreneursHelped(50.0), "A $50 contribution should help 5 entrepreneurs.");
+    assertEquals(1, agri.calculateEntrepreneursHelped(1.0), "A small amount should still help at least 1 entrepreneur.");
   }
 
+  /**
+   * Verifies the ApparelStrategy's image path logic, specifically checking
+   * that it returns a fixed asset path regardless of the amount.
+   */
   @Test
-  @DisplayName("裁縫戦略：最新の仕様（金額に関わらず固定の画像パス）の検証")
+  @DisplayName("Apparel Strategy: Validate fixed image path specification")
   void testApparelStrategyImagePath() {
     ApparelStrategy apparel = new ApparelStrategy();
 
-    // 最新の修正：どの金額でも同じパス（固定画像）を返すことを確認
+    // Verify current spec: fixed path for all amounts
     String expectedPath = "/images/Microfinance_100.jpg";
-    assertEquals(expectedPath, apparel.getImagePath(10.0), "10ドルでも固定パスを返すべきです");
-    assertEquals(expectedPath, apparel.getImagePath(500.0), "500ドルでも固定パスを返すべきです");
+    assertEquals(expectedPath, apparel.getImagePath(10.0), "Should return fixed path for $10.");
+    assertEquals(expectedPath, apparel.getImagePath(500.0), "Should return fixed path for $500.");
   }
 
+  /**
+   * Tests global calculations in the ImpactModel, specifically the total
+   * amount raised and the progress toward the financial goal.
+   */
   @Test
-  @DisplayName("モデル：全体合計金額と目標達成率（%）の計算検証")
+  @DisplayName("Model: Validate global total and completion percentage calculations")
   void testModelGlobalCalculations() {
     // Arrange
     model.addSupport(new Donation(100.0, "UserA", "Test", "2026-04-18"));
     model.addSupport(new Microfinance(200.0, "UserB", "Test", "2026-04-18", new HealthStrategy()));
 
-    // Act & Assert
-    // 合計が 300.0 になっているか
-    assertEquals(300.0, model.getTotalAmount(), "合計金額の計算に誤りがあります");
+    // Act & Assert: Total should be 300.0
+    assertEquals(300.0, model.getTotalAmount(), "Global total amount calculation is incorrect.");
 
-    // 目標10,000ドルに対して300ドルは 3.0% か（浮動小数点の比較には誤差 0.01 を許容）
-    assertEquals(3.0, model.getCompletionPercentage(), 0.01, "目標達成率（%）の計算に誤りがあります");
+    // Act & Assert: 300 out of 10,000 should be 3.0% (with 0.01 tolerance for floating point)
+    assertEquals(3.0, model.getCompletionPercentage(), 0.01, "Goal completion percentage calculation is incorrect.");
   }
 
+  /**
+   * Boundary value test to ensure the goal completion percentage is
+   * capped at 100.0% even when contributions exceed the target goal.
+   */
   @Test
-  @DisplayName("境界値：目標達成率が100%を超えないことの検証")
+  @DisplayName("Boundary: Ensure completion percentage does not exceed 100%")
   void testBoundaryGoalCompletion() {
-    // 目標10,000ドルを大幅に超える寄付を追加
+    // Add contribution significantly over the $10,000 goal
     model.addSupport(new Donation(20000.0, "VHN", "Donor", "2026-04-18"));
 
-    // 200%ではなく、100.0%でキャップがかかっているか
-    assertEquals(100.0, model.getCompletionPercentage(), "進捗率は最大100%で制限されるべきです");
+    // Verify it is capped at 100.0% instead of 200%
+    assertEquals(100.0, model.getCompletionPercentage(), "Completion percentage should be capped at 100.0%.");
   }
 
+  /**
+   * Verifies that the first and last names are concatenated correctly
+   * within the support objects.
+   */
   @Test
-  @DisplayName("名前の正規化：姓名の結合が期待通りに行われるかの検証")
+  @DisplayName("Naming: Validate full name concatenation")
   void testFullNameConcatenation() {
     Donation d = new Donation(10.0, "Sakura", "Hashimoto", "2026-04-18");
-    assertEquals("Sakura Hashimoto", d.getFullName(), "姓名が正しいフォーマットで結合されていません");
+    assertEquals("Sakura Hashimoto", d.getFullName(), "Full name concatenation does not match the expected format.");
   }
 }

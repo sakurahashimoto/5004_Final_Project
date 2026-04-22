@@ -3,22 +3,39 @@ package impact.logic;
 import impact.core.AbstractSupport;
 
 /**
- * Donation クラス
- * [FIX] getGlobalFact() メソッドを実装し、抽象メソッド未実装のエラーを解消しました。
+ * Donation Class
+ * Represents a direct donation support type.
+ * This class implements specific logic for donation impact,
+ * including tiered badges based on cumulative contributions and specific impact narratives.
  */
 public class Donation extends AbstractSupport {
 
   private double cumulativeTotal;
 
+  /**
+   * Constructs a new Donation instance.
+   * @param amount The current donation amount.
+   * @param firstName The donor's first name.
+   * @param lastName The donor's last name.
+   * @param date The date of the donation.
+   */
   public Donation(double amount, String firstName, String lastName, String date) {
     super(amount, firstName, lastName, "DONATION", date);
     this.cumulativeTotal = amount;
   }
 
+  /**
+   * Sets the cumulative total of donations for this donor to determine their badge tier.
+   * @param total The total amount donated over time.
+   */
   public void setCumulativeTotal(double total) {
     this.cumulativeTotal = total;
   }
 
+  /**
+   * Returns a visual badge title based on the donor's cumulative contribution level.
+   * @return A string representing the donor's status tier.
+   */
   @Override
   public String getImpactBadge() {
     if (cumulativeTotal >= 1000) return "💎 Hall of Fame";
@@ -28,11 +45,16 @@ public class Donation extends AbstractSupport {
     return "🌸 Smile Partner";
   }
 
+  /**
+   * Returns the role name for this support type.
+   * @return The string "Education Advocate".
+   */
   @Override public String getRoleName() { return "Education Advocate"; }
 
   /**
-   * [NEW] 寄付に関する豆知識（Global Fact）を返します。
-   * インターフェースの要件を満たすために追加しました。
+   * Provides a global statistic related to education and child welfare.
+   * This fulfills the requirement defined in the Supportable interface.
+   * @return A relevant global fact based on the donation amount.
    */
   @Override
   public String getGlobalFact() {
@@ -43,7 +65,9 @@ public class Donation extends AbstractSupport {
   }
 
   /**
-   * 金額としきい値を、用意した画像ファイル名に合わせるための補助メソッド。
+   * Helper method to map the donation amount to a specific threshold string.
+   * Used for matching file names and determining impact scales.
+   * @return A string representing the impact level ("250", "50", etc.).
    */
   private String getImpactLevel() {
     if (amount >= 250) return "250";
@@ -53,6 +77,10 @@ public class Donation extends AbstractSupport {
     return "lessthanfive";
   }
 
+  /**
+   * Provides a specific story about how the donation amount is utilized in education.
+   * @return A descriptive string of the tangible impact.
+   */
   @Override
   protected String getSpecificImpact() {
     String level = getImpactLevel();
@@ -65,6 +93,10 @@ public class Donation extends AbstractSupport {
     }
   }
 
+  /**
+   * Calculates the number of children or students assisted by this donation.
+   * @return The count of people helped.
+   */
   @Override
   public int getPeopleHelped() {
     String level = getImpactLevel();
@@ -77,10 +109,18 @@ public class Donation extends AbstractSupport {
     }
   }
 
+  /**
+   * Returns the file path for the impact image, dynamically determined by the impact level.
+   * @return The string path to the image asset.
+   */
   @Override
   public String getImagePath() {
     return "/images/Donation_" + getImpactLevel() + ".jpg";
   }
 
+  /**
+   * Determines if the donation qualifies for a tax deduction (threshold: $250).
+   * @return true if deductible, false otherwise.
+   */
   public boolean isTaxDeductible() { return amount >= 250.0; }
 }

@@ -6,70 +6,76 @@ import org.junit.jupiter.api.DisplayName;
 
 /**
  * SmileLogControllerTest
- * [Principle 6 & 13] 入力チェック（バリデーション）とデータの浄化（サニタイズ）を検証します。
- * ユーザーがどんなに入力を間違えても、システムが正しく守られるかを確認します。
+ * [Principle 6 & 13] Validates input checking (validation) and data cleansing (sanitization).
+ * This test suite ensures the system remains robust and secure, regardless of user input errors.
+ * It follows the Arrange-Act-Assert (AAA) pattern for clear unit testing.
  */
 class SmileLogControllerTest {
 
   /**
-   * 1. 名前のサニタイズ（浄化）テスト
-   * ユーザーが「sAKURA」と打っても、内部では「Sakura」として保存されるべきです。
+   * 1. Name Sanitization Test
+   * Verifies that user input like "sAKURA" is internally converted to "Sakura"
+   * to maintain data consistency.
    */
   @Test
-  @DisplayName("サニタイズ：1文字目だけが大文字に変換されるか？")
+  @DisplayName("Sanitization: Is only the first letter capitalized?")
   void testNameSanitization() {
-    // --- Arrange (準備) ---
+    // --- Arrange ---
     String rawName = "sAKURA";
 
-    // --- Act (実行：実際のコントローラーのロジックをシミュレート) ---
-    // 実際のコード：fNameRaw.substring(0, 1).toUpperCase() + fNameRaw.substring(1).toLowerCase();
+    // --- Act (Simulating the controller logic) ---
     String sanitized = rawName.substring(0, 1).toUpperCase() + rawName.substring(1).toLowerCase();
 
-    // --- Assert (検証) ---
-    assertEquals("Sakura", sanitized, "名前は1文字目だけが大文字の形式に変換されるべきです");
+    // --- Assert ---
+    assertEquals("Sakura", sanitized, "The name should be converted to title case (first letter uppercase).");
   }
 
   /**
-   * 2. 空欄チェック（バリデーション）のテスト
-   * 名前が空のまま登録ボタンを押されたとき、正しく「空である」と判定できるか。
+   * 2. Empty Field Validation Test
+   * Ensures that the system correctly identifies and rejects inputs consisting only of whitespace.
    */
   @Test
-  @DisplayName("バリデーション：空の名前を拒否できるか？")
+  @DisplayName("Validation: Can it reject an empty name?")
   void testEmptyNameValidation() {
     // --- Arrange ---
-    String emptyName = "   "; // スペースだけの入力
+    String emptyName = "   "; // Input with only spaces
 
     // --- Act & Assert ---
-    // trim() を使って空白を消した結果が空文字("")になるかをチェック
-    assertTrue(emptyName.trim().isEmpty(), "スペースだけの入力は『空』と判定されるべきです");
+    assertTrue(emptyName.trim().isEmpty(), "Input consisting only of spaces should be identified as 'empty'.");
   }
 
   /**
-   * 3. 数値形式のチェック
-   * 金額欄に「abc」などの文字が入ったとき、正しくエラーをキャッチできるか。
+   * 3. Numerical Format Resilience Test
+   * Confirms that the system correctly throws a NumberFormatException when non-numeric
+   * strings are provided in the amount field.
    */
   @Test
-  @DisplayName("堅牢性：数字以外の入力で正しく例外が発生するか？")
+  @DisplayName("Robustness: Does non-numeric input trigger an exception?")
   void testInvalidAmountFormat() {
     // --- Arrange ---
     String invalidInput = "100dollars";
 
     // --- Act & Assert ---
-    // 数字以外の文字列を Double に変換しようとしたとき、NumberFormatException が出るか検証
     assertThrows(NumberFormatException.class, () -> {
       Double.parseDouble(invalidInput);
-    }, "数字以外の入力があった場合は、例外（エラー）を投げて止まるべきです");
+    }, "The system should throw a NumberFormatException and halt processing for non-numeric input.");
   }
 
   /**
-   * 4. 金額のトリム処理
-   * ユーザーが「 250 」のように前後にスペースを入れても正しく読み取れるか。
+   * 4. Amount Trimming Test
+   * Ensures that leading or trailing spaces in the amount field are automatically
+   * removed before parsing.
    */
   @Test
-  @DisplayName("バリデーション：金額の前後のスペースが自動除去されるか？")
+  @DisplayName("Validation: Are leading/trailing spaces in the amount removed?")
   void testAmountTrimming() {
+    // --- Arrange ---
     String inputWithSpaces = "  250.0  ";
+
+    // --- Act ---
     double amount = Double.parseDouble(inputWithSpaces.trim());
-    assertEquals(250.0, amount, "前後のスペースは自動的に削除（trim）されるべきです");
+
+    // --- Assert ---
+    assertEquals(250.0, amount, "Leading and trailing spaces should be automatically removed (trimmed).");
   }
 }

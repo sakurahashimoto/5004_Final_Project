@@ -1,11 +1,5 @@
 package impact.ui.test;
 
-/**
- * 【超重要：インポート文】
- * これらは「テスト専用の道具箱」から必要な道具を取り出す作業です。
- * static import を使うことで、Assertions.assertEquals() と書かずに
- * 直接 assertEquals() と書けるようになります。
- */
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -18,26 +12,25 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * SmileLogModelTest クラス
- * * テストの基本構成は「準備 (Arrange)」「実行 (Act)」「検証 (Assert)」の3段階です。
+ * SmileLogModelTest Class
+ * [MVC: Model Testing]
+ * This test suite validates the data management logic within the ImpactModel class.
+ * It focuses on data persistence (CSV I/O), aggregate calculations, and
+ * search functionality using the Arrange-Act-Assert (AAA) pattern.
  */
 class SmileLogModelTest {
 
-  // 1. 【フィールド（メンバー変数）】
-  // テスト対象となる「モデル」と、テスト用の「仮のCSVファイル名」を準備します。
   private ImpactModel model;
   private final String TEST_CSV = "junit_test_data.csv";
 
   /**
-   * 2. 【@BeforeEach：テスト前の儀式】
-   * 「各テストの直前」に必ず実行されます。
-   * テストごとに新しい model を作り直すのは、前のテストのデータが
-   * 残っていると、計算が狂って正しく判定できないからです。
+   * Setup method executed before each test.
+   * Re-instantiates the model and ensures the test environment is clean
+   * by deleting any existing test CSV files.
    */
   @BeforeEach
   void setUp() {
     model = new ImpactModel();
-    // もし古いテスト用ファイルが残っていたら、一旦消して真っさらにします。
     File file = new File(TEST_CSV);
     if (file.exists()) {
       file.delete();
@@ -45,9 +38,9 @@ class SmileLogModelTest {
   }
 
   /**
-   * 3. 【@AfterEach：テスト後の後片付け】
-   * テストが終わるたびに呼ばれます。
-   * Sakuraさんのパソコンに「テスト用のゴミ（CSV）」を残さないためのマナーです。
+   * Cleanup method executed after each test.
+   * Deletes the temporary test CSV file to prevent side effects on the
+   * local file system.
    */
   @AfterEach
   void tearDown() {
@@ -58,75 +51,84 @@ class SmileLogModelTest {
   }
 
   /**
-   * 4. 【@Test：実際のテストケース】
+   * Verifies that adding a support object correctly updates the total amount.
    */
   @Test
-  @DisplayName("Model：データを入れたら合計金額が正しく増えるか？")
+  @DisplayName("Model: Does adding data correctly increase the total amount?")
   void testDataAddition() {
-    // --- A: 準備 (Arrange) ---
-    // 100ドルの寄付データを作ります。
+    // --- Arrange ---
     Donation d = new Donation(100.0, "Sakura", "Hashimoto", "2026-04-18");
 
-    // --- B: 実行 (Act) ---
-    // モデルにデータを登録します。
+    // --- Act ---
     model.addSupport(d);
 
-    // --- C: 検証 (Assert) ---
-    // 「合計金額は100.0のはずだ！」と宣言します。
-    // 第1引数：期待する値 (100.0)
-    // 第2引数：実際の計算結果 (model.getTotalAmount())
-    // 第3引数：もし失敗した時に人間が見るエラーメッセージ
-    assertEquals(100.0, model.getTotalAmount(), "合計金額が 100.0 になっている必要があります");
+    // --- Assert ---
+    assertEquals(100.0, model.getTotalAmount(), "Total amount must be 100.0 after addition.");
   }
 
+  /**
+   * Validates that the history search logic is case-insensitive and
+   * correctly retrieves records based on a partial name match.
+   */
   @Test
-  @DisplayName("検索：名前で検索して履歴が見つかるか？（大文字小文字の違いも無視できるか）")
+  @DisplayName("Search: Can history be found by name (case-insensitive)?")
   void testSearchHistory() {
-    // 準備：Sakuraさんの名前で登録
+    // Arrange
     model.addSupport(new Donation(50.0, "Sakura", "Hashimoto", "2026-04-18"));
 
-    // 実行：あえて小文字の "sakura" で検索してみる
+    // Act: Search using lowercase "sakura"
     String history = model.getConciseHistory("sakura");
 
-    // 検証：history（文字列）の中に "Sakura Hashimoto" という文字が含まれている（contains）か？
-    // assertTrue は「カッコの中が true（正解）であること」をチェックします。
-    assertTrue(history.contains("Sakura Hashimoto"), "履歴に正しい名前が含まれている必要があります");
+    // Assert
+    assertTrue(history.contains("Sakura Hashimoto"), "The history report should contain the donor's full name.");
   }
 
+  /**
+   * Validates the CSV persistence logic.
+   * Ensures that data saved by one model instance can be accurately
+   * reconstructed by another.
+   * @throws IOException If file handling fails during the test.
+   */
   @Test
-  @DisplayName("CSV：保存したデータを読み直しても、金額が壊れていないか？")
+  @DisplayName("CSV: Is data integrity maintained after saving and reloading?")
   void testCSVLogic() throws IOException {
-    // 準備：250ドルのデータを1件入れる
+    // Arrange
     model.addSupport(new Donation(250.0, "CSV_User", "Test", "2026-04-18"));
 
-    // 実行1：ファイルに保存する
+    // Act 1: Save to CSV
     model.saveToCSV(TEST_CSV);
 
-    // 実行2：新しい「空のモデル」を作り、そこへファイルを読み込む（復元作業）
+    // Act 2: Reconstruct into a new model instance
     ImpactModel newModel = new ImpactModel();
     newModel.loadFromCSV(TEST_CSV);
 
-    // 検証：復元されたモデルの合計金額が、元の 250.0 と同じか？
-    assertEquals(250.0, newModel.getTotalAmount(), "CSVから読み込んだ後も金額が維持されるべきです");
+    // Assert
+    assertEquals(250.0, newModel.getTotalAmount(), "Amount should remain 250.0 after CSV reconstruction.");
   }
 
+  /**
+   * Verifies that the completion percentage is capped at 100.0%,
+   * even if the total amount exceeds the goal.
+   */
   @Test
-  @DisplayName("境界値：目標金額を超えても、進捗率は100%で止まるか？")
+  @DisplayName("Boundary: Is progress capped at 100% when exceeding the goal?")
   void testGoalCap() {
-    // 準備：目標1万ドルに対して、1万5千ドルという巨額の寄付を入れる
+    // Arrange: $15,000 donation against a $10,000 goal
     model.addSupport(new Donation(15000.0, "Rich", "Donor", "2026-04-18"));
 
-    // 検証：150% ではなく、上限の 100.0% になっているか？
-    assertEquals(100.0, model.getCompletionPercentage(), "進捗率は最大100%でなければなりません");
+    // Assert
+    assertEquals(100.0, model.getCompletionPercentage(), "Progress percentage must not exceed 100.0%.");
   }
 
+  /**
+   * Ensures the system is resilient when attempting to load non-existent files.
+   */
   @Test
-  @DisplayName("堅牢性：存在しないファイルを読み込もうとしてもアプリが落ちないか？")
+  @DisplayName("Robustness: Does the app handle missing files without crashing?")
   void testErrorHandling() {
-    // assertDoesNotThrow は、「この中の処理を実行してもエラー（例外）が出ないこと」をテストします。
-    // () -> { ... } という書き方は「この処理を今すぐやってみて」という合言葉です。
+    // Assert
     assertDoesNotThrow(() -> {
-      model.loadFromCSV("存在しないファイル.csv");
-    }, "存在しないファイルを読み込んでもクラッシュ（エラー停止）してはいけません");
+      model.loadFromCSV("non_existent_file.csv");
+    }, "Loading a missing file should be handled gracefully without throwing exceptions.");
   }
 }

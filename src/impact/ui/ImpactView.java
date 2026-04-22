@@ -8,17 +8,20 @@ import java.awt.*;
 import java.io.File;
 
 /**
- * ImpactView クラス (Humanitarian Final Edition - Layout Fix)
- * [FIX] マイクロファイナンス選択時にボタンが消える（潰れる）問題を修正しました。
+ * ImpactView Class
+ * [MVC: View Layer]
+ * Handles the Graphical User Interface (GUI) for the SmileLog application.
+ * Manages the layout for the Welcome, Input, and My Page screens using a CardLayout.
+ * Includes custom themes, dashboards for global progress, and responsive UI elements.
  */
 public class ImpactView extends JFrame {
 
-  // --- 🌸 【フォトギャラリー用のファイルパス設定】 🌸 ---
+  // --- 🌸 Image Gallery Paths ---
   private final String GALLERY_PATH_1 = "/images/gallery_1.jpg";
   private final String GALLERY_PATH_2 = "/images/gallery_2.jpg";
   private final String GALLERY_PATH_3 = "/images/gallery_3.jpg";
 
-  // カラーパレット
+  // Color Palette
   private final Color SL_NAVY = new Color(30, 41, 59);
   private final Color SL_ROSE = new Color(244, 114, 114);
   private final Color BG_CREAM = new Color(252, 251, 247);
@@ -54,15 +57,18 @@ public class ImpactView extends JFrame {
   private JPanel photoArea = new JPanel(new BorderLayout());
   private JLabel imageLabel = new JLabel();
 
-  // ダッシュボード
+  // Dashboard components
   private JLabel globalTotalLabel = new JLabel("$0.00");
   private JLabel goalLabel = new JLabel("Target Goal: $10,000.00");
   private JProgressBar progressBar = new JProgressBar(0, 100);
   private JLabel progressPercentLabel = new JLabel("0%");
 
-  // [NEW] レイアウト崩れを防ぐための親パネル参照
+  // Reference for form container
   private JPanel inputCard;
 
+  /**
+   * Constructs the view and initializes the main UI framework.
+   */
   public ImpactView() {
     setTitle("SmileLog | Building a Brighter Future");
     setExtendedState(MAXIMIZED_BOTH);
@@ -76,6 +82,9 @@ public class ImpactView extends JFrame {
     setupToggleLogic();
   }
 
+  /**
+   * Sets up listeners and styles for the mode selection toggles.
+   */
   private void setupToggleLogic() {
     donateToggle.setFocusPainted(false);
     microToggle.setFocusPainted(false);
@@ -88,29 +97,29 @@ public class ImpactView extends JFrame {
       currentType = "DONATION";
       missionGroup.setVisible(false);
       updateToggleStyles();
-      // コンテナ全体を再描画して、ボタンの消失を防ぐ
-      inputCard.revalidate();
-      inputCard.repaint();
+      revalidate();
+      repaint();
     });
     microToggle.addActionListener(e -> {
       currentType = "MICROFINANCE";
       missionGroup.setVisible(true);
       updateToggleStyles();
-      inputCard.revalidate();
-      inputCard.repaint();
+      revalidate();
+      repaint();
     });
   }
 
+  /**
+   * Updates the visual appearance of the Donation/Microfinance toggles.
+   */
   private void updateToggleStyles() {
     boolean isDonation = currentType.equals("DONATION");
 
-    // 背景と文字色
     donateToggle.setBackground(isDonation ? SL_NAVY : Color.WHITE);
     donateToggle.setForeground(isDonation ? Color.WHITE : SL_NAVY);
     microToggle.setBackground(!isDonation ? SL_NAVY : Color.WHITE);
     microToggle.setForeground(!isDonation ? Color.WHITE : SL_NAVY);
 
-    // 枠線の強調
     donateToggle.setBorder(new LineBorder(isDonation ? SL_NAVY : BORDER_SOFT, 2));
     microToggle.setBorder(new LineBorder(!isDonation ? SL_NAVY : BORDER_SOFT, 2));
 
@@ -118,6 +127,9 @@ public class ImpactView extends JFrame {
     microToggle.setOpaque(true);
   }
 
+  /**
+   * Initializes the Welcome/Splash screen layout.
+   */
   private void setupWelcomeScreen() {
     JPanel p = new JPanel(new GridBagLayout()); p.setBackground(Color.WHITE);
     GridBagConstraints gbc = new GridBagConstraints();
@@ -130,6 +142,9 @@ public class ImpactView extends JFrame {
     cardPanel.add(p, "Welcome");
   }
 
+  /**
+   * Creates a consistent header bar for the different application views.
+   */
   private JPanel createHeader(boolean showNav) {
     JPanel h = new JPanel(new BorderLayout()); h.setBackground(Color.WHITE);
     h.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0,0,1,0,BORDER_SOFT), new EmptyBorder(10,50,10,50)));
@@ -144,6 +159,9 @@ public class ImpactView extends JFrame {
     return h;
   }
 
+  /**
+   * Builds the dashboard component that displays global fundraising progress.
+   */
   private JPanel createDashboardProgressCard() {
     JPanel card = new JPanel(new BorderLayout(30, 0)); card.setBackground(Color.WHITE);
     card.setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_SOFT, 1, true), new EmptyBorder(15, 35, 15, 35)));
@@ -173,14 +191,17 @@ public class ImpactView extends JFrame {
     return card;
   }
 
+  /**
+   * Helper method to create photo containers for the UI gallery.
+   */
   private JPanel createGalleryItem(String path) {
     JPanel item = new JPanel(new BorderLayout(0, 5)); item.setOpaque(false);
     JLabel img = new JLabel();
-    img.setPreferredSize(new Dimension(200, 200));
+    img.setPreferredSize(new Dimension(175, 175));
     img.setBorder(new LineBorder(BORDER_SOFT)); img.setHorizontalAlignment(SwingConstants.CENTER);
     URL image_path = getClass().getResource(path);
     if (image_path != null) {
-      img.setIcon(new ImageIcon(new ImageIcon(image_path).getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH)));
+      img.setIcon(new ImageIcon(new ImageIcon(image_path).getImage().getScaledInstance(175, 175, Image.SCALE_SMOOTH)));
     } else {
       img.setText("📷 Photo Slot"); img.setFont(new Font("SansSerif", Font.PLAIN, 9));
       img.setBackground(Color.WHITE); img.setOpaque(true);
@@ -189,21 +210,24 @@ public class ImpactView extends JFrame {
     return item;
   }
 
+  /**
+   * Initializes the primary input screen, which contains the donation form and impact display.
+   */
   private void setupInputScreen() {
     JPanel p = new JPanel(new BorderLayout()); p.setBackground(BG_CREAM);
     p.add(createHeader(true), BorderLayout.NORTH);
 
     JPanel body = new JPanel(new GridBagLayout()); body.setOpaque(false);
-    body.setBorder(new EmptyBorder(15, 60, 15, 60));
+    body.setBorder(new EmptyBorder(10, 60, 10, 60));
     GridBagConstraints mainGbc = new GridBagConstraints();
     mainGbc.fill = GridBagConstraints.BOTH;
 
     GridBagConstraints topGbc = new GridBagConstraints();
     topGbc.gridx = 0; topGbc.gridy = 0; topGbc.gridwidth = 2; topGbc.weightx = 1.0;
-    topGbc.fill = GridBagConstraints.HORIZONTAL; topGbc.insets = new Insets(0, 0, 20, 0);
+    topGbc.fill = GridBagConstraints.HORIZONTAL; topGbc.insets = new Insets(0, 0, 10, 0);
     body.add(createDashboardProgressCard(), topGbc);
 
-    // --- 🌸 【左側パネル】 🌸 ---
+    // --- 🌸 Left Panel Layout ---
     JPanel leftSide = new JPanel(new GridBagLayout()); leftSide.setOpaque(false);
     GridBagConstraints lGbc = new GridBagConstraints();
     lGbc.fill = GridBagConstraints.HORIZONTAL; lGbc.weightx = 1.0; lGbc.gridx = 0; lGbc.anchor = GridBagConstraints.NORTH;
@@ -234,28 +258,26 @@ public class ImpactView extends JFrame {
     lGbc.gridy = 1; lGbc.insets = new Insets(0, 0, 0, 0); leftSide.add(insightCard, lGbc);
     lGbc.gridy = 2; leftSide.add(galleryPanel, lGbc);
 
-    // --- 🌸 【右側パネル：入力フォーム】 🌸 ---
+    // --- 🌸 Right Panel Layout: Input Form ---
     JPanel rightSide = new JPanel(new GridBagLayout()); rightSide.setOpaque(false);
     GridBagConstraints rGbc = new GridBagConstraints();
     rGbc.fill = GridBagConstraints.HORIZONTAL; rGbc.weightx = 1.0; rGbc.gridx = 0; rGbc.anchor = GridBagConstraints.NORTH;
 
-    // [FIX] inputCard の参照を保持し、再描画を確実にします
-    inputCard = new JPanel(new BorderLayout(0, 15)); inputCard.setBackground(Color.WHITE);
-    inputCard.setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_SOFT, 1, true), new EmptyBorder(25,35,25,35)));
+    inputCard = new JPanel(new BorderLayout(0, 10)); inputCard.setBackground(Color.WHITE);
+    inputCard.setBorder(BorderFactory.createCompoundBorder(new LineBorder(BORDER_SOFT, 1, true), new EmptyBorder(15,30,15,30)));
 
     JPanel fds = new JPanel(new GridBagLayout()); fds.setOpaque(false);
     GridBagConstraints g = new GridBagConstraints(); g.fill = GridBagConstraints.HORIZONTAL; g.weightx = 1.0; g.gridx = 0; g.gridy = 0;
 
-    // [FIX] ボタンパネル：最低高さを設定して潰れないようにします
     JPanel tp = new JPanel(new GridLayout(1, 2, 10, 0)); tp.setOpaque(false);
-    Dimension btnSize = new Dimension(140, 50);
+    Dimension btnSize = new Dimension(140, 45);
     donateToggle.setPreferredSize(btnSize); donateToggle.setMinimumSize(btnSize);
     microToggle.setPreferredSize(btnSize); microToggle.setMinimumSize(btnSize);
     tp.add(donateToggle); tp.add(microToggle);
 
-    fds.add(tp, g); g.gridy++; g.insets = new Insets(15,0,0,0);
+    fds.add(tp, g); g.gridy++; g.insets = new Insets(10,0,0,0);
 
-    missionGroup = new JPanel(new BorderLayout(0, 5)); missionGroup.setOpaque(false);
+    missionGroup = new JPanel(new BorderLayout(0, 2)); missionGroup.setOpaque(false);
     JLabel misLbl = new JLabel("SELECT MISSION SECTOR"); misLbl.setFont(new Font("SansSerif", Font.BOLD, 10));
     missionGroup.add(misLbl, BorderLayout.NORTH);
     missionGroup.add(missionBox, BorderLayout.CENTER); missionGroup.setVisible(false);
@@ -266,17 +288,17 @@ public class ImpactView extends JFrame {
     fds.add(createInputGroup("GIFT AMOUNT ($)", amtField), g);
 
     createBtn.setBackground(SL_NAVY); createBtn.setForeground(Color.WHITE); createBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
-    createBtn.setPreferredSize(new Dimension(250, 60)); createBtn.setOpaque(true); createBtn.setBorderPainted(false);
+    createBtn.setPreferredSize(new Dimension(250, 50)); createBtn.setOpaque(true); createBtn.setBorderPainted(false);
 
-    inputCard.add(new JLabel("<html><h3 style='color:#1e293b; font-family:serif; margin-bottom:5px;'>Join the Mission</h3></html>"), BorderLayout.NORTH);
+    inputCard.add(new JLabel("<html><h3 style='color:#1e293b; font-family:serif; margin-bottom:2px;'>Join the Mission</h3></html>"), BorderLayout.NORTH);
     inputCard.add(fds, BorderLayout.CENTER); inputCard.add(createBtn, BorderLayout.SOUTH);
 
     viewDocBtn.setVisible(false); viewDocBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
-    viewDocBtn.setBackground(Color.WHITE); viewDocBtn.setBorder(new LineBorder(SL_ROSE)); viewDocBtn.setPreferredSize(new Dimension(250, 48));
-    JPanel dw = new JPanel(new BorderLayout()); dw.setOpaque(false); dw.setBorder(new EmptyBorder(10, 0, 0, 0)); dw.add(viewDocBtn, BorderLayout.CENTER);
+    viewDocBtn.setBackground(Color.WHITE); viewDocBtn.setBorder(new LineBorder(SL_ROSE)); viewDocBtn.setPreferredSize(new Dimension(250, 40));
+    JPanel dw = new JPanel(new BorderLayout()); dw.setOpaque(false); dw.setBorder(new EmptyBorder(5, 0, 0, 0)); dw.add(viewDocBtn, BorderLayout.CENTER);
 
     recentActivityArea.setEditable(false); recentActivityArea.setBackground(new Color(0,0,0,0)); recentActivityArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-    JPanel qh = new JPanel(new BorderLayout(0, 10)); qh.setOpaque(false); qh.setBorder(new EmptyBorder(20, 0, 0, 0));
+    JPanel qh = new JPanel(new BorderLayout(0, 10)); qh.setOpaque(false); qh.setBorder(new EmptyBorder(10, 0, 0, 0));
     qh.add(new JLabel("RECENT COMMUNITY ACTIVITY"), BorderLayout.NORTH); qh.add(recentActivityArea, BorderLayout.CENTER);
 
     rGbc.gridy = 0; rightSide.add(inputCard, rGbc);
@@ -291,13 +313,16 @@ public class ImpactView extends JFrame {
     cardPanel.add(p, "Input");
   }
 
+  /**
+   * Resets the dashboard to its initial state with placeholder text and default visuals.
+   */
   private void setInitialState() {
     photoArea.removeAll();
     JPanel wc = new JPanel(new GridBagLayout()); wc.setBackground(new Color(255, 245, 247));
     URL image_path = getClass().getResource("/images/default_image.jpg");
     JLabel img = new JLabel();
     if (image_path != null) {
-      img.setIcon(new ImageIcon(new ImageIcon(image_path).getImage().getScaledInstance(-1, 250, Image.SCALE_SMOOTH)));
+      img.setIcon(new ImageIcon(new ImageIcon(image_path).getImage().getScaledInstance(-1, 200, Image.SCALE_SMOOTH)));
     } else {
       img.setText("✨ Impact Dashboard"); img.setFont(new Font("Serif", Font.BOLD, 26));
       img.setBackground(Color.WHITE); img.setOpaque(true);
@@ -307,6 +332,9 @@ public class ImpactView extends JFrame {
     factArea.setText("Every $1 invested in childhood education yields $16 in local economic returns.");
   }
 
+  /**
+   * Configures the layout for the My Page screen, which displays historical donor data.
+   */
   private void setupMyPageScreen() {
     JPanel p = new JPanel(new BorderLayout()); p.setBackground(BG_CREAM);
     p.add(createHeader(false), BorderLayout.NORTH);
@@ -345,20 +373,29 @@ public class ImpactView extends JFrame {
     cardPanel.add(p, "MyPage");
   }
 
+  /**
+   * Helper method to generate labeled input containers.
+   */
   private JPanel createInputGroup(String l, JTextField f) {
-    JPanel g = new JPanel(new BorderLayout(0, 5)); g.setOpaque(false);
+    JPanel g = new JPanel(new BorderLayout(0, 2)); g.setOpaque(false);
     JLabel lbl = new JLabel(l); lbl.setFont(new Font("SansSerif", Font.BOLD, 12));
-    g.add(lbl, BorderLayout.NORTH); f.setPreferredSize(new Dimension(0, 42)); f.setBorder(new LineBorder(BORDER_SOFT));
+    g.add(lbl, BorderLayout.NORTH); f.setPreferredSize(new Dimension(0, 38)); f.setBorder(new LineBorder(BORDER_SOFT));
     f.setFont(new Font("SansSerif", Font.PLAIN, 16));
-    g.add(f, BorderLayout.CENTER); g.setBorder(new EmptyBorder(8, 0, 0, 0));
+    g.add(f, BorderLayout.CENTER); g.setBorder(new EmptyBorder(4, 0, 0, 0));
     return g;
   }
 
+  /**
+   * Displays a modal dialog to show generated documents (Receipts/Certificates).
+   */
   public void showDocumentModal(String title, String text) {
     JTextArea area = new JTextArea(text); area.setFont(new Font("Monospaced", Font.PLAIN, 14)); area.setEditable(false); area.setMargin(new Insets(25, 25, 25, 25));
     JOptionPane.showMessageDialog(this, new JScrollPane(area), title, JOptionPane.PLAIN_MESSAGE);
   }
 
+  /**
+   * Updates the UI text and visuals dynamically when impact data changes.
+   */
   public void setStoryContent(String story, String imagePath, String fact, boolean showBtn, String btnText) {
     storyArea.setText(story); factArea.setText(fact);
     viewDocBtn.setText(btnText); viewDocBtn.setVisible(showBtn);
@@ -367,7 +404,7 @@ public class ImpactView extends JFrame {
     try {
       URL image_url = getClass().getResource(imagePath);
       if (image_url != null) {
-        ImageIcon icon = new ImageIcon(new ImageIcon(image_url).getImage().getScaledInstance(-1, 250, Image.SCALE_SMOOTH));
+        ImageIcon icon = new ImageIcon(new ImageIcon(image_url).getImage().getScaledInstance(-1, 200, Image.SCALE_SMOOTH));
         imageLabel.setIcon(icon);
         wc.add(imageLabel); photoArea.add(wc, BorderLayout.CENTER);
       } else {
@@ -376,8 +413,11 @@ public class ImpactView extends JFrame {
       }
     } catch (Exception e) {}
     photoArea.revalidate(); photoArea.repaint();
+    revalidate();
+    repaint();
   }
 
+  // --- 🌸 Getter and Setter Methods for Controller synchronization ---
   public void updateRecentActivity(String text) { recentActivityArea.setText(text); }
   public String getSelectedType() { return currentType; }
   public String getSelectedMission() { return missionBox.getSelectedItem().toString(); }

@@ -2,7 +2,8 @@ package impact.core;
 
 /**
  * AbstractSupport
- * [UPDATE] getGlobalFact() を抽象メソッドとして定義し、子クラスに実装を任せます。
+ * Defines the common structure for all support types.
+ * This class uses the Template Method pattern to standardize how impact messages are generated.
  */
 public abstract class AbstractSupport implements Supportable {
   protected double amount;
@@ -26,8 +27,9 @@ public abstract class AbstractSupport implements Supportable {
   @Override public String getDate() { return this.date; }
 
   /**
-   * [Template Method]
-   * [UPDATE] ここからは「豆知識」を除去し、純粋なストーリーのみを表示するようにしました。
+   * Template Method
+   * Generates a standardized mission report.
+   * Specific details are provided by subclasses via abstract methods.
    */
   @Override
   public String getImpactMessage() {
@@ -39,10 +41,15 @@ public abstract class AbstractSupport implements Supportable {
         getSpecificImpact());
   }
 
+  /** @return A visual or text-based badge representing the support type. */
   public abstract String getImpactBadge();
+
+  /** @return A specific description of the impact achieved (e.g., items purchased). */
   protected abstract String getSpecificImpact();
 
-  /** [NEW] インターフェースの要件を満たすため、抽象メソッドとして定義 */
+  /** * Returns a global fact related to the cause.
+   * Defined as abstract to force concrete subclasses to provide relevant data.
+   */
   @Override
   public abstract String getGlobalFact();
 }

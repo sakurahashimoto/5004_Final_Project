@@ -1,15 +1,16 @@
 package impact.logic;
 
 /**
- * HealthStrategy クラス
+ * HealthStrategy
  * [Strategy Pattern: Concrete Strategy]
- * 医療・保健分野における支援ロジックと画像パスの生成を担当します。
- * [UPDATE] getGlobalFact() を実装し、医療支援に関する豆知識を分離しました。
+ * Responsible for the logic, impact narratives, and data regarding
+ * health and medical microfinance support.
  */
 public class HealthStrategy implements EmpowermentStrategy {
 
   /**
-   * 分野名を返します。
+   * Returns the official name of this sector.
+   * @return The sector designation string.
    */
   @Override
   public String getSectorName() {
@@ -17,18 +18,23 @@ public class HealthStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * 金額に応じた支援人数（保健ワーカーや恩恵を受ける人数）を計算します。
+   * Calculates the number of healthcare workers supported or individuals impacted
+   * based on the contribution amount.
+   * @param amount The financial contribution.
+   * @return The count of people helped.
    */
   @Override
   public int calculateEntrepreneursHelped(double amount) {
-    if (amount >= 100) return 20; // 地域の小規模クリニック全体を支援
-    if (amount >= 50)  return 8;  // 複数の保健ワーカーを支援
-    if (amount >= 15)  return 3;  // 特定の家族やワーカーを支援
+    if (amount >= 100) return 20; // Supports a whole small local clinic
+    if (amount >= 50)  return 8;  // Supports multiple health workers
+    if (amount >= 15)  return 3;  // Supports specific families or workers
     return 1;
   }
 
   /**
-   * 金額に応じた具体的な投資ストーリーを返します。
+   * Generates a descriptive story about the medical equipment or services provided.
+   * @param amount The financial contribution.
+   * @return A string describing the tangible medical impact.
    */
   @Override
   public String getInvestmentStory(double amount) {
@@ -45,7 +51,10 @@ public class HealthStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * [NEW] 医療・保健に関する豆知識（Global Fact）を取得します。
+   * Provides global statistics and insights regarding public health and primary care.
+   * This implementation separates educational facts from the specific investment story.
+   * @param amount The financial contribution.
+   * @return A relevant global health fact.
    */
   @Override
   public String getGlobalFact(double amount) {
@@ -59,8 +68,10 @@ public class HealthStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * [IMAGE LOGIC] 金額に応じた画像パスを生成します。
-   * 用意されたファイル名 (Microfinance_100.jpg 等) に合わせました。
+   * Returns the file path for the representative image.
+   * Standardized to match system asset naming conventions.
+   * @param amount The financial contribution.
+   * @return The string path to the image resource.
    */
   @Override
   public String getImagePath(double amount) {

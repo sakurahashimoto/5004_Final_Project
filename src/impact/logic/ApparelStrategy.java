@@ -1,16 +1,27 @@
 package impact.logic;
 
 /**
- * ApparelStrategy クラス
- * [UPDATE] getGlobalFact() を実装し、裁縫支援に関する豆知識を分離しました。
+ * ApparelStrategy
+ * [Strategy Pattern: Concrete Strategy]
+ * Defines the business logic, impact calculations, and storytelling for
+ * apparel and tailoring-related microfinance support.
  */
 public class ApparelStrategy implements EmpowermentStrategy {
 
+  /**
+   * Returns the official name of this sector.
+   * @return The sector designation string.
+   */
   @Override
   public String getSectorName() {
     return "Apparel Partner";
   }
 
+  /**
+   * Calculates the number of entrepreneurs supported based on the contribution amount.
+   * @param amount The financial contribution.
+   * @return The count of tailors or artisans assisted.
+   */
   @Override
   public int calculateEntrepreneursHelped(double amount) {
     if (amount >= 100) return 9;
@@ -19,6 +30,11 @@ public class ApparelStrategy implements EmpowermentStrategy {
     return 1;
   }
 
+  /**
+   * Generates a descriptive story about the specific equipment or materials purchased.
+   * @param amount The financial contribution.
+   * @return A string representing the tangible impact in the apparel sector.
+   */
   @Override
   public String getInvestmentStory(double amount) {
     if (amount >= 100) {
@@ -31,7 +47,10 @@ public class ApparelStrategy implements EmpowermentStrategy {
   }
 
   /**
-   * [NEW] 裁縫・雇用に関する豆知識
+   * [NEW] Provides global statistics related to gender-focused economic empowerment.
+   * This method separates general facts from specific investment stories.
+   * @param amount The financial contribution.
+   * @return A relevant global fact string.
    */
   @Override
   public String getGlobalFact(double amount) {
@@ -41,6 +60,11 @@ public class ApparelStrategy implements EmpowermentStrategy {
     return "Micro-loans for raw materials allow artisans to double their profit margin.";
   }
 
+  /**
+   * Returns the file path for the representative image.
+   * @param amount The financial contribution.
+   * @return The string path to the image resource.
+   */
   @Override
   public String getImagePath(double amount) {
     return "/images/Microfinance_100.jpg";
